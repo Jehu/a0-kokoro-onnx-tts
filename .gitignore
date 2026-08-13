@@ -1,0 +1,11 @@
+# Agent Zero runtime state
+config.json
+.toggle-0
+.toggle-1
+
+# Python build/runtime artifacts
+__pycache__/
+*.py[cod]
+
+# Downloaded models
+models/
