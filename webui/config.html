@@ -1,0 +1,173 @@
+<html>
+<head>
+  <title>Kokoro ONNX TTS</title>
+  <script type="module">
+    import { callJsonApi } from "/js/api.js";
+    import { toastFrontendError } from "/components/notifications/notification-store.js";
+
+    window.kokoroOnnxTts = { callJsonApi, toastFrontendError };
+  </script>
+</head>
+<body>
+  <div x-data="{
+    resolving: false,
+    initConfig() {
+      config.voice ??= '';
+      config.speed = Number(config.speed) || 1;
+      config.lang ||= 'en-us';
+      config.hf_repo ??= '';
+      config.model_file ??= '';
+      config.voices_file ??= '';
+      config.mixed_lang ||= 'en-us';
+      config.mixed_lang_terms ??= '';
+    },
+    async detectFiles() {
+      const repo = String(config.hf_repo || '').trim();
+      if (!repo || this.resolving) return;
+
+      this.resolving = true;
+      try {
+        const result = await window.kokoroOnnxTts.callJsonApi(
+          '/plugins/kokoro_onnx_tts/resolve_hf_repo',
+          { repo },
+        );
+        if (!result?.success) {
+          throw new Error(result?.error || 'Could not detect model files.');
+        }
+        config.model_file = result.model_file || '';
+        config.voices_file = result.voices_file || '';
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        void window.kokoroOnnxTts.toastFrontendError(message, 'Kokoro ONNX TTS');
+      } finally {
+        this.resolving = false;
+      }
+    },
+  }">
+    <template x-if="config">
+      <div class="plugin-config-page" x-init="initConfig()">
+        <div class="section-title">Kokoro ONNX TTS</div>
+        <div class="section-description">
+          Configure a local Kokoro ONNX voice. Models are downloaded and cached when first used.
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <div class="field-title">Voice</div>
+            <div class="field-description">The voice identifier available in the selected voices file.</div>
+          </div>
+          <div class="field-control">
+            <input type="text" x-model.trim="config.voice" placeholder="af_bella" aria-label="Kokoro voice" />
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <div class="field-title">Speed</div>
+            <div class="field-description">Speech speed from 0.5× to 2.0×.</div>
+          </div>
+          <div class="field-control kokoro-onnx-tts__speed">
+            <input type="range" min="0.5" max="2" step="0.1" x-model.number="config.speed" aria-label="Speech speed" />
+            <output x-text="`${Number(config.speed || 1).toFixed(1)}×`"></output>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <div class="field-title">Language</div>
+            <div class="field-description">espeak-ng language code, such as <code>en-us</code> or <code>de</code>.</div>
+          </div>
+          <div class="field-control">
+            <input type="text" x-model.trim="config.lang" placeholder="en-us" aria-label="Primary language" />
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <div class="field-title">Hugging Face repo</div>
+            <div class="field-description">Enter an owner/repository ID, then detect the model and voices files.</div>
+          </div>
+          <div class="field-control kokoro-onnx-tts__repo-row">
+            <input
+              type="text"
+              x-model.trim="config.hf_repo"
+              @keydown.enter.prevent="detectFiles()"
+              placeholder="Godelaune/Kokoro-82M-ONNX-German-Martin"
+              aria-label="Hugging Face repository"
+            />
+            <button type="button" class="button" @click="detectFiles()" :disabled="!config.hf_repo || resolving">
+              <span x-show="!resolving">Detect files</span>
+              <span x-show="resolving">Detecting…</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <div class="field-title">Model file</div>
+            <div class="field-description">Auto-filled by detection; leave blank to detect at runtime.</div>
+          </div>
+          <div class="field-control">
+            <input type="text" x-model.trim="config.model_file" placeholder="kokoro.onnx" aria-label="ONNX model file" />
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <div class="field-title">Voices file</div>
+            <div class="field-description">Auto-filled by detection; leave blank to detect at runtime.</div>
+          </div>
+          <div class="field-control">
+            <input type="text" x-model.trim="config.voices_file" placeholder="voices-v1.0.bin" aria-label="Kokoro voices file" />
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <div class="field-title">Mixed-language terms</div>
+            <div class="field-description">Optional comma- or newline-separated terms to pronounce in another language.</div>
+          </div>
+          <div class="field-control">
+            <textarea x-model.trim="config.mixed_lang_terms" rows="4" placeholder="API, Kubernetes, TypeScript" aria-label="Mixed-language terms"></textarea>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <div class="field-title">Mixed-language code</div>
+            <div class="field-description">espeak-ng language code used for the mixed-language terms.</div>
+          </div>
+          <div class="field-control">
+            <input type="text" x-model.trim="config.mixed_lang" placeholder="en-us" aria-label="Mixed-language code" />
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <style>
+    .kokoro-onnx-tts__speed,
+    .kokoro-onnx-tts__repo-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .kokoro-onnx-tts__speed input,
+    .kokoro-onnx-tts__repo-row input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .kokoro-onnx-tts__speed output {
+      min-width: 40px;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .kokoro-onnx-tts__repo-row button {
+      flex: 0 0 auto;
+    }
+  </style>
+</body>
+</html>

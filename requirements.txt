@@ -1,0 +1,2 @@
+# Installed into Agent Zero's framework runtime by execute.py.
+kokoro-onnx>=0.5.0

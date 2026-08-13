@@ -1,0 +1,8 @@
+name: kokoro_onnx_tts
+title: Kokoro ONNX TTS
+description: Local ONNX Kokoro TTS provider with Hugging Face model discovery, download caching, and optional mixed-language term pronunciation.
+version: 0.1.0
+settings_sections:
+  - agent
+per_project_config: false
+per_agent_config: false

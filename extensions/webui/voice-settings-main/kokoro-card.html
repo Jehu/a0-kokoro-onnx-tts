@@ -1,0 +1,42 @@
+<div x-data>
+  <template x-if="$store.kokoroOnnxTts">
+    <section class="kokoro-onnx-tts-card" x-init="$store.kokoroOnnxTts.ensureStatusLoaded()">
+      <div class="kokoro-onnx-tts-card__header">
+        <div>
+          <div class="kokoro-onnx-tts-card__title">Kokoro ONNX TTS</div>
+          <div class="kokoro-onnx-tts-card__description">Local server-side speech synthesis.</div>
+        </div>
+        <span class="kokoro-onnx-tts-card__status" x-text="$store.kokoroOnnxTts.statusText"></span>
+      </div>
+      <div class="kokoro-onnx-tts-card__meta" x-show="$store.kokoroOnnxTts.enabled">
+        <span>Voice</span>
+        <code x-text="$store.kokoroOnnxTts.config.voice || 'Not configured'"></code>
+      </div>
+      <button class="btn btn-field" type="button" @click="$store.kokoroOnnxTts.openConfig()">Configure</button>
+    </section>
+  </template>
+</div>
+
+<style>
+  .kokoro-onnx-tts-card {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-input);
+  }
+
+  .kokoro-onnx-tts-card__header,
+  .kokoro-onnx-tts-card__meta {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .kokoro-onnx-tts-card__title { font-weight: 700; }
+  .kokoro-onnx-tts-card__description { color: var(--color-text-secondary); font-size: var(--font-size-small); }
+  .kokoro-onnx-tts-card__status { color: var(--color-text-secondary); font-size: var(--font-size-small); white-space: nowrap; }
+  .kokoro-onnx-tts-card__meta code { font-family: var(--font-mono); overflow-wrap: anywhere; text-align: right; }
+</style>
